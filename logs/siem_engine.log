@@ -1,0 +1,7 @@
+2026-10-16 20:09:11 [INFO] Threat Response Engine inicializado.
+2026-10-16 20:09:11 [INFO] Ingestión completada: 2 IPs únicas identificadas.
+2026-10-16 20:09:11 [INFO] Intel obtenida para 203.0.113.42: País=United States, ISP=TEST-NET-3
+2026-10-16 20:09:11 [INFO] Intel obtenida para 198.51.100.23: País=Romania, ISP=TEST-NET-2
+2026-10-16 20:09:11 [INFO] Mitigación SIMULADA para IP 203.0.113.42: sudo iptables -A INPUT -s 203.0.113.42 -j DROP
+2026-10-16 20:09:11 [INFO] Mitigación SIMULADA para IP 198.51.100.23: sudo iptables -A INPUT -s 198.51.100.23 -j DROP
+2026-10-16 20:09:11 [INFO] Informe de auditoría JSON generado en: reports\threat_report_20261016_200911.json

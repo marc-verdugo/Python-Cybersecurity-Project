@@ -1,0 +1,19 @@
+{
+    "engine_metadata": {
+        "execution_timestamp": "2026-10-16T20:09:11.434225",
+        "source_log": "logs/auth_sample.log",
+        "total_threats_processed": 2
+    },
+    "incidents": {
+        "203.0.113.42": {
+            "country": "United States",
+            "isp": "TEST-NET-3",
+            "action": "blocked_simulated"
+        },
+        "198.51.100.23": {
+            "country": "Romania",
+            "isp": "TEST-NET-2",
+            "action": "blocked_simulated"
+        }
+    }
+}
