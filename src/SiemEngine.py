@@ -1,5 +1,6 @@
 import re
 import os
+import requests
 
 class SiemEngine:
     def __init__(self, log_path):
@@ -32,6 +33,43 @@ class SiemEngine:
             
         return malicious_ips
 
+    def analyze_threat_intelligence(self, ips):
+        """
+        Módulo de Inteligencia: Consulta una API externa REST para geolocalizar 
+        y obtener información del proveedor (ISP) de las IPs sospechosas.
+        """
+        threat_data = {}
+        
+        for ip in ips:
+            try:
+                # Petición GET a la API con la IP insertada dinámicamente en la URL
+                response = requests.get(f"http://ip-api.com/json/{ip}")
+                
+                if response.status_code == 200:
+                    data = response.json()
+                    
+                    if data.get("status") == "success":
+                        country = data.get("country", "Desconocido")
+                        isp = data.get("isp", "Desconocido")
+                        
+                        # Guardamos la inteligencia recolectada en un diccionario
+                        threat_data[ip] = {
+                            "country": country,
+                            "isp": isp,
+                            "action": "pending" 
+                        }
+                        print(f"    INTEL OBTENIDA -> IP: {ip} | País: {country} | ISP: {isp}")
+                    else:
+                        print(f"    La API no tiene datos para la IP: {ip}")
+                else:
+                    print(f"    [ERROR] Fallo en la API para {ip}. Código: {response.status_code}")
+                    
+            except requests.exceptions.RequestException as e:
+                # Control de excepciones por si falla la red (DNS, timeouts, etc.)
+                print(f"    [ERROR CRÍTICO de Red] No se pudo consultar la IP {ip}: {e}")
+                
+        return threat_data
+    
 if __name__ == "__main__":
     
     log_file = "logs/auth_sample.log"
@@ -42,7 +80,13 @@ if __name__ == "__main__":
     # Fase 1: Ingestión
     print("Ejecutando Módulo de Ingestión...")
     suspicious_ips = engine.extract_malicious_ips()
+    print(f"Análisis completado. Se encontraron {len(suspicious_ips)} IPs sospechosas")
+
+    # Fase 2: Inteligencia
+    if suspicious_ips:
+        print("\nEjecutando Módulo de Inteligencia...")
+        intel_results = engine.analyze_threat_intelligence(suspicious_ips)
+    else:
+        print("No hay amenazas activas. Sistema seguro.")
+
     
-    print(f"Análisis completado. Se encontraron {len(suspicious_ips)} IPs sospechosas únicas:")
-    for ip in suspicious_ips:
-        print(f"    -> {ip}")
