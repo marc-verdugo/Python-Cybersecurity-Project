@@ -1,6 +1,7 @@
 import re
 import os
 import requests
+import subprocess
 
 class SiemEngine:
     def __init__(self, log_path):
@@ -69,6 +70,33 @@ class SiemEngine:
                 print(f"    [ERROR CRÍTICO de Red] No se pudo consultar la IP {ip}: {e}")
                 
         return threat_data
+
+    def apply_mitigation(self, threat_data, dry_run=True):
+        """
+        Módulo de Mitigación: Utiliza subprocesos de OS para generar y ejecutar 
+        reglas de bloqueo en el Firewall de Linux (iptables).
+        """
+        for ip, info in threat_data.items():
+            # Comando estándar de iptables para bloquear tráfico entrante
+            command = ["sudo", "iptables", "-A", "INPUT", "-s", ip, "-j", "DROP"]
+            
+            if dry_run:
+                # Simulación segura sin alterar la red ni requerir permisos root
+                info["action"] = "blocked_simulated"
+                print(f"    [SIMULACIÓN FIREWALL] Comando a ejecutar: {' '.join(command)}")
+            else:
+                try:
+                    result = subprocess.run(command, capture_output=True, text=True, check=True)
+                    info["action"] = "blocked_active"
+                    print(f"    [ÉXITO FIREWALL] IP {ip} bloqueada en iptables.")
+                except subprocess.CalledProcessError as e:
+                    info["action"] = "failed"
+                    print(f"    [ERROR FIREWALL] Error al bloquear la IP {ip}: {e.stderr.strip()}")
+                except FileNotFoundError:
+                    info["action"] = "failed_os_unsupported"
+                    print(f"    [ERROR OS] 'iptables' no está disponible en este sistema operativo.")
+                    
+        return threat_data
     
 if __name__ == "__main__":
     
@@ -86,6 +114,10 @@ if __name__ == "__main__":
     if suspicious_ips:
         print("\nEjecutando Módulo de Inteligencia...")
         intel_results = engine.analyze_threat_intelligence(suspicious_ips)
+        
+        # Fase 3: Mitigación
+        print("\nEjecutando Módulo de Mitigación...")
+        mitigated_results = engine.apply_mitigation(intel_results, dry_run=True)
     else:
         print("No hay amenazas activas. Sistema seguro.")
 
